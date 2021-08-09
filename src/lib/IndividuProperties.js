@@ -181,6 +181,15 @@ const STEPS = {
     },
   },
 
+  contrat_de_travail_debut: {
+    question: (component) => {
+      return component.individu.alternant
+        ? "Quand avez-vous commencé votre alternance ?"
+        : "Quand avez-vous commencé votre contrat de travail ?"
+    },
+    questionType: "date",
+  },
+
   date_naissance: {
     question: (component) => {
       return component.entity._role === "demandeur"
