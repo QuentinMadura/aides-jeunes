@@ -1,5 +1,6 @@
 import Individu from "@/lib/Individu"
 import { isRelevant, yearsAgo } from "@/lib/Utils"
+import Scolarite from "@/lib/Scolarite"
 
 export default {
   aah_restriction_substantielle_durable_acces_emploi: {
@@ -326,7 +327,7 @@ export default {
         : `Où sera scolarisé·e ${component.individu._firstName} à la rentrée prochaine ?`
     },
     questionType: "enum",
-    items: Individu.scolariteOptions,
+    items: Scolarite.options,
     enSavoirPlus: true,
   },
   sortie_academie: {
@@ -357,7 +358,7 @@ export default {
   mention_baccalaureat: {
     question: "Avez-vous obtenu une mention au baccalauréat ?",
     questionType: "enum",
-    items: Individu.mentionsBaccalaureat,
+    items: Scolarite.mentionsBaccalaureat,
   },
   statuts_etablissement_scolaire: {
     question: "Dans quel type d'établissement étudiez-vous actuellement ?",
