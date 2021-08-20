@@ -16,6 +16,17 @@
         <p v-html="meta.help" />
       </template>
     </YesNoQuestion>
+
+    <template
+      v-if="
+        isRelevantQuestionForContribution(fieldName, meta.openfiscaVariable)
+      "
+    >
+      <ContributionForm
+        v-model="contribution.famille[fieldName]"
+      ></ContributionForm>
+    </template>
+
     <Actions v-bind:onSubmit="onSubmit" />
   </form>
 </template>
@@ -28,6 +39,8 @@ import { executeFunctionOrReturnValue, capitalize } from "@/lib/Utils"
 import EnSavoirPlus from "@/components/EnSavoirPlus"
 import YesNoQuestion from "@/components/YesNoQuestion"
 import InputNumber from "@/components/InputNumber"
+import { createContributionMixin } from "@/mixins/ContributionMixin"
+import ContributionForm from "@/components/ContributionForm"
 
 export default {
   name: "FamilleProperty",
@@ -36,9 +49,23 @@ export default {
     Actions,
     YesNoQuestion,
     EnSavoirPlus,
+    ContributionForm,
   },
+  mixins: [createContributionMixin()],
   data: function () {
-    return this.loadQuestion(this.$route.params.fieldName)
+    const params = this.$route.params
+    const famille = { ...this.$store.state.situation.famille }
+    const value = famille[params.fieldName]
+    const contribution = this.initContribution(
+      "famille",
+      params.fieldName,
+      FamilleQuestions[params.fieldName].openfiscaVariable
+    )
+    return {
+      famille,
+      value,
+      contribution,
+    }
   },
   computed: {
     fieldName: function () {
@@ -63,14 +90,6 @@ export default {
     },
   },
   methods: {
-    loadQuestion(fieldName) {
-      const famille = { ...this.$store.state.situation.famille }
-      const value = famille[fieldName]
-      return {
-        famille,
-        value,
-      }
-    },
     requiredValueMissing: function () {
       const hasError = this.value === undefined
       this.$store.dispatch(
@@ -80,11 +99,23 @@ export default {
       return hasError
     },
     onSubmit: function () {
-      if (this.requiredValueMissing()) {
+      if (
+        this.needCheckContrib(
+          "famille",
+          this.fieldName,
+          this.meta.openfiscaVariable
+        ) &&
+        this.requiredValueMissing()
+      ) {
         return
       }
       this.famille[this.fieldName] = this.value
       this.$store.dispatch("updateFamille", this.famille)
+      this.saveContribution(
+        "famille",
+        this.fieldName,
+        this.meta.openfiscaVariable
+      )
       this.$push()
     },
   },

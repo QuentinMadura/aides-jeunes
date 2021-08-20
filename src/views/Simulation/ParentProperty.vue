@@ -38,6 +38,17 @@
     <YesNoQuestion v-else v-model="value">
       <div v-html="question"></div>
     </YesNoQuestion>
+
+    <template
+      v-if="
+        isRelevantQuestionForContribution(fieldName, meta.openfiscaVariable)
+      "
+    >
+      <ContributionForm
+        v-model="contribution.parents[fieldName]"
+      ></ContributionForm>
+    </template>
+
     <Actions v-bind:onSubmit="onSubmit" />
   </form>
 </template>
@@ -46,6 +57,8 @@
 import Actions from "@/components/Actions"
 import YesNoQuestion from "../../components/YesNoQuestion.vue"
 import InputNumber from "@/components/InputNumber"
+import { createContributionMixin } from "@/mixins/ContributionMixin"
+import ContributionForm from "@/components/ContributionForm"
 
 const data = {
   _situation: {
@@ -96,16 +109,26 @@ export default {
     InputNumber,
     Actions,
     YesNoQuestion,
+    ContributionForm,
   },
+  mixins: [createContributionMixin()],
   data: function () {
+    const fieldName = this.$route.params.fieldName
     const parents = {
       ...(this.$store.getters.getParents || {}),
     }
-    const value = parents[this.$route.params.fieldName]
+    const value = parents[fieldName]
+
+    const contribution = this.initContribution(
+      "parents",
+      fieldName,
+      data[fieldName].openfiscaVariable
+    )
     return {
       error: false,
       parents,
       value,
+      contribution,
     }
   },
   computed: {
@@ -135,11 +158,23 @@ export default {
       return hasError
     },
     onSubmit: function () {
-      if (this.requiredValueMissing()) {
+      if (
+        this.needCheckContrib(
+          "parents",
+          this.fieldName,
+          this.meta.openfiscaVariable
+        ) &&
+        this.requiredValueMissing()
+      ) {
         return
       }
       this.parents[this.fieldName] = this.value
       this.$store.dispatch("updateParents", this.parents)
+      this.saveContribution(
+        "parents",
+        this.fieldName,
+        this.meta.openfiscaVariable
+      )
       this.$push()
     },
   },

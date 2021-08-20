@@ -73,6 +73,7 @@ function defaultStore() {
     debug: false,
     situation: {
       _id: null,
+      _contribution: false,
       external_id: null,
       dateDeValeur: now,
       enfants: [],
@@ -99,6 +100,7 @@ function defaultStore() {
     inIframe: false,
     iframeOrigin: null,
     saveSituationError: null,
+    contribution: {},
   }
 }
 
@@ -117,6 +119,7 @@ function restoreLocal() {
     calculs: store.calculs || defaultCalculs(),
     dates: datesGenerator(store.situation.dateDeValeur),
     ameliNoticationDone: store.ameliNoticationDone,
+    contribution: store.contribution || {},
   }
 }
 
@@ -130,6 +133,9 @@ const store = new Vuex.Store({
     },
     getDebug: function (state) {
       return state.debug
+    },
+    getContribution: function (state) {
+      return state.situation._contribution
     },
     peopleParentsFirst: function (state) {
       return []
@@ -250,12 +256,17 @@ const store = new Vuex.Store({
       state.debug = debug
     },
     initialize: function (state) {
-      const { situation, dates, ameliNoticationDone, calculs } = restoreLocal()
+      const { situation, dates, ameliNoticationDone, calculs, contribution } =
+        restoreLocal()
       state.situation = situation
       state.calculs = calculs
       state.dates = dates
       state.ameliNoticationDone = ameliNoticationDone
       state.saveSituationError = null
+      state.contribution = contribution
+    },
+    setContribution: function (state, contribution) {
+      state.situation._contribution = contribution
     },
     saveFamille: function (state, famille) {
       state.situation = Object.assign({}, state.situation, { famille })
@@ -370,6 +381,9 @@ const store = new Vuex.Store({
     setSaveSituationError: function (state, saveSituationError) {
       state.saveSituationError = saveSituationError
     },
+    saveContribution: function (state, contribution) {
+      Vue.set(state, "contribution", contribution)
+    },
   },
   actions: {
     clear: function ({ commit }, external_id) {
@@ -379,6 +393,9 @@ const store = new Vuex.Store({
     },
     setDebug: function ({ commit }, debug) {
       commit("setDebug", debug)
+    },
+    setContribution: function ({ commit }, contribution) {
+      commit("setContribution", contribution)
     },
     initialize: function ({ commit }) {
       commit("initialize")
@@ -518,6 +535,9 @@ const store = new Vuex.Store({
           }
         })
     },
+    saveContribution: function ({ commit }, contribution) {
+      commit("saveContribution", contribution)
+    },
   },
   modules: {
     etablissementsSearch: EtablissementModule,
@@ -525,15 +545,17 @@ const store = new Vuex.Store({
 })
 export default store
 
-store.subscribe(({ type }, { ameliNoticationDone, situation, calculs }) => {
-  if (type === "initialize") {
-    return
+store.subscribe(
+  ({ type }, { ameliNoticationDone, situation, calculs, contribution }) => {
+    if (type === "initialize") {
+      return
+    }
+    window.sessionStorage.setItem(
+      "store",
+      JSON.stringify({ ameliNoticationDone, situation, calculs, contribution })
+    )
   }
-  window.sessionStorage.setItem(
-    "store",
-    JSON.stringify({ ameliNoticationDone, situation, calculs })
-  )
-})
+)
 
 // Replicate strict mode
 store._vm.$watch(

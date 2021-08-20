@@ -22,6 +22,11 @@
         </option>
       </select>
     </div>
+
+    <template v-if="isRelevantQuestionForContribution('depcom')">
+      <ContributionForm v-model="contribution.menage.depcom"></ContributionForm>
+    </template>
+
     <WarningMessage v-if="warningMessage" :text="warningMessage" />
     <Actions v-bind:onSubmit="onSubmit" />
   </form>
@@ -32,15 +37,20 @@ import Actions from "@/components/Actions"
 import Commune from "@/lib/Commune"
 import WarningMessage from "@/components/WarningMessage"
 import Warning from "../../../lib/Warnings"
+import ContributionForm from "@/components/ContributionForm"
+import { createContributionMixin } from "@/mixins/ContributionMixin"
 
 export default {
   name: "SimulationMenageDepcom",
   components: {
     Actions,
     WarningMessage,
+    ContributionForm,
   },
+  mixins: [createContributionMixin()],
   data: function () {
     const menage = { ...this.$store.getters.getMenage } || {}
+    const contribution = this.initContribution("menage", "depcom")
     return {
       menage: menage,
       retrievingCommunes: false,
@@ -52,6 +62,7 @@ export default {
         label: "Veuillez sélectionner votre ville",
         selectedValue: menage._nomCommune,
       },
+      contribution,
     }
   },
   computed: {
@@ -105,7 +116,10 @@ export default {
 
   methods: {
     onSubmit: function () {
-      if (this.communeQuestion.selectedValue === undefined) {
+      if (
+        this.needCheckContrib("menage", "depcom") &&
+        this.communeQuestion.selectedValue === undefined
+      ) {
         this.$store.dispatch("updateError", "Ce champ est obligatoire.")
         return
       }
@@ -119,6 +133,7 @@ export default {
         this.menage._nomCommune = this.communeQuestion.selectedValue
         this.$store.dispatch("updateMenage", this.menage)
       }
+      this.saveContribution("menage", "depcom")
       this.$push()
     },
   },

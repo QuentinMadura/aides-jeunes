@@ -55,6 +55,17 @@
         ><p v-html="meta.help"></p
       ></template>
     </YesNoQuestion>
+
+    <template
+      v-if="
+        isRelevantQuestionForContribution(fieldName, meta.openfiscaVariable)
+      "
+    >
+      <ContributionForm
+        v-model="contribution[entityName][fieldName]"
+      ></ContributionForm>
+    </template>
+
     <Actions v-bind:onSubmit="onSubmit" />
   </form>
 </template>
@@ -69,6 +80,8 @@ import { executeFunctionOrReturnValue, capitalize } from "@/lib/Utils"
 import EnSavoirPlus from "@/components/EnSavoirPlus"
 import InputNumber from "@/components/InputNumber"
 import InputDate from "@/components/InputDate"
+import ContributionForm from "@/components/ContributionForm"
+import { createContributionMixin } from "@/mixins/ContributionMixin"
 
 export default {
   name: "IndividuProperty",
@@ -78,9 +91,31 @@ export default {
     Actions,
     YesNoQuestion,
     EnSavoirPlus,
+    ContributionForm,
   },
+  mixins: [createContributionMixin()],
   data: function () {
-    return this.loadQuestion(this.$route.params)
+    const params = this.$route.params
+    const role = params.id.split("_")[0]
+    const { individu } = Individu.get(
+      this.$store.getters.peopleParentsFirst,
+      role,
+      params.id,
+      this.$store.state.dates
+    )
+    const value = individu[params.fieldName]
+
+    const contribution = this.initContribution(
+      params.id,
+      params.fieldName,
+      IndividuQuestions[params.fieldName].openfiscaVariable
+    )
+    return {
+      error: false,
+      individu,
+      value,
+      contribution,
+    }
   },
   computed: {
     fieldName: function () {
@@ -88,6 +123,9 @@ export default {
     },
     meta: function () {
       return IndividuQuestions[this.fieldName]
+    },
+    entityName: function () {
+      return this.$route.params.id
     },
     role: function () {
       return this.$route.params.id.split("_")[0]
@@ -111,21 +149,6 @@ export default {
     },
   },
   methods: {
-    loadQuestion(params) {
-      const role = params.id.split("_")[0]
-      const { individu } = Individu.get(
-        this.$store.getters.peopleParentsFirst,
-        role,
-        params.id,
-        this.$store.state.dates
-      )
-      const value = individu[params.fieldName]
-      return {
-        error: false,
-        individu,
-        value,
-      }
-    },
     getLabel: function (type) {
       return Individu.label(this.individu, type)
     },
@@ -138,11 +161,23 @@ export default {
       return hasError
     },
     onSubmit: function () {
-      if (this.requiredValueMissing()) {
+      if (
+        this.needCheckContrib(
+          this.entityName,
+          this.fieldName,
+          this.meta.openfiscaVariable
+        ) &&
+        this.requiredValueMissing()
+      ) {
         return
       }
       this.individu[this.fieldName] = this.value
       this.$store.dispatch("updateIndividu", this.individu)
+      this.saveContribution(
+        this.entityName,
+        this.fieldName,
+        this.meta.openfiscaVariable
+      )
       this.$push()
     },
   },
