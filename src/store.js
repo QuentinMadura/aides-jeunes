@@ -134,7 +134,7 @@ const store = new Vuex.Store({
     getDebug: function (state) {
       return state.debug
     },
-    getContribution: function (state) {
+    isContributionMode: function (state) {
       return state.situation._contribution
     },
     peopleParentsFirst: function (state) {
@@ -437,9 +437,11 @@ const store = new Vuex.Store({
     },
     save: function (store) {
       const disabledSteps = store.getters.getAllSteps.filter((s) => !s.isActive)
-      disabledSteps.forEach((step) => {
-        step.clean(store, true)
-      })
+      if (this.$store.getters.isContributionMode) {
+        disabledSteps.forEach((step) => {
+          step.clean(store, true)
+        })
+      }
 
       let situation = { ...store.state.situation }
       delete situation._id
