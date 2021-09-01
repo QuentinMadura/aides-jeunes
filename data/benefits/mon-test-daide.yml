@@ -1,0 +1,7 @@
+label: Mon test d'aide
+institution: action_logement
+description: La description qui déchire
+prefix: la
+type: bool
+floorAt: 10
+entity: foyers_fiscaux
