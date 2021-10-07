@@ -1,0 +1,14 @@
+label: "Mon Aide "
+institution: etat
+description: Ma description
+prefix: l’
+type: bool
+floorAt: 10
+entity: menage
+computesLocally: true
+montant: 200
+regions:
+  - "11"
+departements:
+  - "95"
+statuts: null
