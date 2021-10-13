@@ -1,5 +1,5 @@
 label: test QUENTIN MADURA
-institution: action_logement
+institution: Département de l’Eure-et-Loir
 description: "dasdasdasda das das das d das dasd asdasd asd "
 conditions:
   - dsads
@@ -8,3 +8,4 @@ type: bool
 floorAt: 10
 interestFlag: "null"
 entity: individus
+computesLocally: true
